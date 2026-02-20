@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amber Arbour Candles</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@1&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    font-family:'Poppins', sans-serif;
+    background: linear-gradient(135deg,#ffd6e7,#ffe9f3);
+    overflow-x:hidden;
+}
+
+/* floating hearts */
+.heart{
+    position:fixed;
+    bottom:-20px;
+    color:#ff4d88;
+    animation: floatUp 6s linear infinite;
+    opacity:.6;
+}
+@keyframes floatUp{
+    0%{transform:translateY(0) scale(0.8);}
+    100%{transform:translateY(-110vh) scale(1.4);}
+}
+
+header{
+    text-align:center;
+    padding:30px;
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-size:38px;
+    color:#c2185b;
+    font-weight:bold;
+}
+
+.products{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:25px;
+    padding:30px;
+}
+
+.card{
+    background:white;
+    border-radius:20px;
+    padding:15px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+    text-align:center;
+    transition:.3s;
+}
+.card:hover{
+    transform:translateY(-6px) scale(1.03);
+}
+
+.card img{
+    width:100%;
+    height:220px;
+    object-fit:cover;
+    border-radius:15px;
+}
+
+.price{
+    font-weight:bold;
+    color:#e91e63;
+    margin:8px 0;
+}
+
+button{
+    background:#ff4d88;
+    border:none;
+    color:white;
+    padding:8px 16px;
+    border-radius:20px;
+    cursor:pointer;
+    font-weight:600;
+    margin:3px;
+}
+button:hover{
+    background:#e91e63;
+}
+
+/* cart */
+.cart{
+    background:white;
+    margin:20px;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.1);
+}
+
+.cart li{
+    margin:8px 0;
+}
+
+input,textarea,select{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border-radius:10px;
+    border:1px solid #ccc;
+}
+
+.qr-box{
+    text-align:center;
+    margin-top:10px;
+}
+
+.qr-box img{
+    width:200px;
+    border-radius:15px;
+    margin-top:10px;
+}
+
+/* whatsapp button */
+.whatsapp{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:#25D366;
+    color:white;
+    padding:14px 18px;
+    border-radius:50px;
+    font-weight:bold;
+    text-decoration:none;
+    box-shadow:0 6px 15px rgba(0,0,0,0.2);
+}
+</style>
+</head>
+
+<body>
+
+<header>✨ Amber Arbour Candles ✨</header>
+
+<section class="products">
+
+<div class="card">
+<img src="./candle1.jpeg">
+<h3>Flower Glass Candle</h3>
+<div class="price">₹249</div>
+<button onclick="addToCart('Flower Glass Candle',249)">Add to Cart</button>
+</div>
+
+<div class="card">
+<img src="./candle2.jpeg">
+<h3>Flower Bouquet Candle</h3>
+<div class="price">₹199</div>
+<button onclick="addToCart('Flower Bouquet Candle',199)">Add to Cart</button>
+</div>
+
+<div class="card">
+<img src="./candle3.jpeg">
+<h3>Daisy Gift Candle</h3>
+<div class="price">₹299</div>
+<button onclick="addToCart('Daisy Gift Candle',299)">Add to Cart</button>
+</div>
+
+</section>
+
+<div class="cart">
+<h2>🛒 Your Cart</h2>
+<ul id="cartList"></ul>
+<h3>Total: ₹<span id="total">0</span></h3>
+
+<h3>📍 Delivery Address</h3>
+<input type="text" placeholder="Full Name">
+<input type="text" placeholder="Phone Number">
+<textarea placeholder="Full Address"></textarea>
+
+<h3>💰 Select Payment Method</h3>
+<select id="paymentMethod" onchange="toggleUPI()">
+  <option value="upi">Pay via UPI</option>
+  <option value="cod">Cash on Delivery</option>
+</select>
+
+<div id="upiSection" class="qr-box">
+  <p><b>UPI ID:</b> yourupi@oksbi</p>
+  <p>Scan & pay using any UPI app 💖</p>
+  <img src="./upi-qr.jpeg" alt="UPI QR">
+</div>
+
+<button onclick="placeOrder()">🛍️ Place Order</button>
+</div>
+
+<a class="whatsapp"
+href="https://wa.me/918380964254?text=Hi%20I%20want%20to%20order%20candles"
+target="_blank">💬 Order on WhatsApp</a>
+
+<script>
+let cart = {};
+let total = 0;
+
+function addToCart(name, price) {
+    if (!cart[name]) cart[name] = { price, qty: 0 };
+    cart[name].qty++;
+    renderCart();
+}
+
+function increaseItem(name) {
+    cart[name].qty++;
+    renderCart();
+}
+
+function decreaseItem(name) {
+    cart[name].qty--;
+    if (cart[name].qty <= 0) delete cart[name];
+    renderCart();
+}
+
+function renderCart() {
+    const cartList = document.getElementById("cartList");
+    cartList.innerHTML = "";
+    total = 0;
+
+    for (let item in cart) {
+        const li = document.createElement("li");
+        li.innerHTML = `
+            ${item} — ₹${cart[item].price}
+            <button onclick="decreaseItem('${item}')">−1</button>
+            <b>${cart[item].qty}</b>
+            <button onclick="increaseItem('${item}')">+1</button>
+        `;
+        cartList.appendChild(li);
+        total += cart[item].price * cart[item].qty;
+    }
+
+    document.getElementById("total").textContent = total;
+}
+
+function toggleUPI(){
+    const method = document.getElementById("paymentMethod").value;
+    document.getElementById("upiSection").style.display =
+        method === "upi" ? "block" : "none";
+}
+
+function placeOrder(){
+    if(total === 0){
+        alert("Cart is empty 🥺");
+        return;
+    }
+
+    const method = document.getElementById("paymentMethod").value;
+
+    if(method === "cod"){
+        alert("✅ Order placed with Cash on Delivery!\nWe will contact you soon 💖");
+    } else {
+        alert("💖 Please complete the UPI payment using the QR/UPI ID.\nAfter payment, send screenshot on WhatsApp.");
+    }
+}
+
+/* floating hearts */
+setInterval(() => {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    heart.innerHTML = "💖";
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = (Math.random() * 20 + 15) + "px";
+    heart.style.animationDuration = (Math.random() * 3 + 4) + "s";
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 6000);
+}, 700);
+</script>
+
+</body>
+</html>
